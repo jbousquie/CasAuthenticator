@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+# signature : cas_login.py loginCAS passwordCAS
+# procède à une authentification CAS et renvoie le ticket CAS TGC
+
 # pip3 install urllib3
 # pip3 install lxml 
 # pip3 install bs4
@@ -10,7 +13,10 @@ from bs4 import BeautifulSoup
 
 
 CAS_URL = 'https://cas.ut-capitole.fr/cas/login'
+REFERER = 'https://cas.ut-capitole.fr/cas/login'
 ORIGIN = 'https://cas.ut-capitole.fr'
+
+
 HOST = 'cas.ut-capitole.fr'
 COOKIE_TGC = 'CASTGC='
 GET_HEADERS = {
@@ -19,7 +25,8 @@ GET_HEADERS = {
     'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7', 
     'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15',
     'Cache-Control': 'max-age=0',
-    'Connection': 'keep-alive'
+    'Connection': 'keep-alive',
+    'Host': HOST
 }
 
 post_headers = {
@@ -32,11 +39,13 @@ post_headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Host': HOST,
     'Origin': ORIGIN,
-    'Referer': CAS_URL,
+    'Referer': REFERER,
     }
 
+# Retourne le ticket CAS après authentification selon les credentials passés
 def get_tgc(login, password):
     http = urllib3.PoolManager()
+    
     g = http.request('GET', CAS_URL, headers=GET_HEADERS)
     # récupération du cookie contenant JSESSIONID
     cookie = g.getheader('Set-Cookie')
@@ -49,7 +58,6 @@ def get_tgc(login, password):
     data_soup = BeautifulSoup(html_response, 'lxml')
     form_tag = data_soup.find(id='fm1')
     form_action = form_tag.get('action')
-
 
     # récupération de tous les balises input hidden du formulaire et ajout des crédentials
     fields = {'username': login, 'password': password, 'submit': 'SE CONNECTER'}
@@ -69,7 +77,9 @@ def get_tgc(login, password):
     return tgc
 
 def main():
-    ret = get_tgc(sys.argv[1], sys.argv[2])
+    login = sys.argv[1]
+    password = sys.argv[2]
+    ret = get_tgc(login, password)
     print(ret)
 
 if __name__ == '__main__':
