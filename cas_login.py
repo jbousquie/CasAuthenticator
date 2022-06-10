@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 # signature : cas_login.py loginCAS passwordCAS
 # procède à une authentification CAS et renvoie le ticket CAS TGC
@@ -7,18 +8,24 @@
 # pip3 install lxml 
 # pip3 install bs4
 
+from base64 import encode
 import sys
 import urllib3
 from bs4 import BeautifulSoup
 
-
-CAS_URL = 'https://cas.ut-capitole.fr/cas/login'
-REFERER = 'https://cas.ut-capitole.fr/cas/login'
-ORIGIN = 'https://cas.ut-capitole.fr'
+import config
 
 
-HOST = 'cas.ut-capitole.fr'
-COOKIE_TGC = 'CASTGC='
+CAS_URL = config.CAS_URL
+REFERER = config.REFERER
+ORIGIN = config.ORIGIN
+
+
+HOST = config.HOST
+COOKIE_TGC = config.COOKIE_TGC
+
+
+
 GET_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
     'Accept-Encoding': 'gzip, deflate, br', 
@@ -70,11 +77,34 @@ def get_tgc(login, password):
 
     # requête POST d'envoi des credentials
     post_url = ORIGIN + form_action
-    p = http.request_encode_body('POST', post_url, fields=fields, headers=post_headers, encode_multipart=False)
+    p = http.request_encode_body('POST', post_url, fields=fields, headers=post_headers, encode_multipart=False, redirect=False)
     tgc_cookie = p.getheader('Set-Cookie')
     tmp = tgc_cookie.split(COOKIE_TGC)[1]   # à droite de COOKIE_TGC
     tgc = tmp.split(';')[0]                 # à gauche de ";"
     return tgc
+
+# envoie le ticket TGC au service CASsifié demandé
+def send_tgc(service, tgc, redirect):
+
+    # Étape 1 : https://cas.ut-capitole.fr/cas/login?service=paramService  + TGC en cookie
+    # récupération de la redirection et du ticket ST
+    auth_url = CAS_URL + '?service=' + service
+    http = urllib3.PoolManager()
+    cookie_string = post_headers['Cookie'] + ';CASTGC=' + tgc
+    post_headers['Cookie'] = cookie_string
+    post_headers.pop('Content-Type', None)
+    g_cas = http.request_encode_url('GET', auth_url, headers=post_headers, redirect=False)
+    redirection_url = g_cas.getheader('Location')
+
+    # Étape 2 : https://service/?ticket=serviceTicket  avec les headers corrects
+    u = urllib3.util.parse_url(service)
+    post_headers['Host'] = u.host
+    post_headers['Referer'] = ORIGIN
+    post_headers.pop('Origin', None)
+    post_headers.pop('Cookie', None)
+    g_service = http.request('GET', redirection_url, post_headers, redirect=redirect)
+
+    return g_service
 
 def main():
     login = sys.argv[1]

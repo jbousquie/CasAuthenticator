@@ -1,23 +1,60 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+
+# $ ./auth_webapp.py urlService loginCAS passwordCAS allowRedirect
+# ex : ./auth_webapp.py https://econges.ut-capitole.fr/  jbousqui maudePasse True/False
+# loginCAS, passwordCAS et redirect optionnels, demandés par prompt si non passés
 
 import sys
-from urllib.parse import urlencode
-from cas_login import get_tgc
+import getpass
+from cas_login import get_tgc, send_tgc
 
-def auth_service(service, login, password):
 
-    service_arg = {'service': service}
-    encoded_service = '?' + urlencode(service_arg)
-    #auth_url = CAS_URL + encoded_service
+# Retourne l'objet Response urllib3 à la requête sur l'URL service, authentifiée par CAS avec les credentials passés
+# Le paramètre redirect (True/False) autorise le suivi d'éventuelles redirections (code 302)
+def auth_service(service, login, password, redirect):
+
+    tgc = get_tgc(login, password)
+    response = send_tgc(service, tgc, redirect)
+    return response
 
 
 
 def main():
+    redirect = False
+    l = len(sys.argv)
+    if l < 2:
+        print("Erreur nb parametres. Usage : auth_webapp.py urlService loginCAS passwordCAS redirect")
+        print("ou au minimum : auth_webapp.py urlService  [ loginCAS | passwordCAS | redirect ]  (redirect=False par defaut)")
+        return -1
+
+    redirect_string = ''
     service = sys.argv[1]
-    login = sys.argv[2]
-    password = sys.argv[3]
-    tgc = get_tgc(login, password)
-    print(tgc)
+    
+    if l < 3:
+        login = input('Entrer le login CAS : ')
+    else:
+        login = sys.argv[2]
+    if l < 4:      
+        password = getpass.getpass(prompt='Entrer le password CAS : ')
+    else:
+        password = sys.argv[3]
+    if l < 5:
+        redirect_string = input('Entrer le redirect True/False : ')
+    else: 
+        redirect_string = sys.argv[4]        
+
+    if redirect_string == "True":
+        redirect = True
+
+    response = auth_service(service, login, password, redirect)
+    print(response.data.decode('utf-8'))
+    print(response.getheaders())
+    print(response.status)
+    print(response.geturl())
+
+
 
 if __name__ == '__main__':
     sys.exit(main())
