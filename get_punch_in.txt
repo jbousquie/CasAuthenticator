@@ -1,0 +1,21 @@
+GET /fr/time/punch/add_virtual HTTP/1.1
+Host: ohris.ut-capitole.fr
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:104.0) Gecko/20100101 Firefox/104.0
+Accept: application/json, text/javascript, */*; q=0.01
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate, br
+Referer: https://ohris.ut-capitole.fr/fr/
+X-Requested-With: XMLHttpRequest
+Connection: keep-alive
+Cookie: SERVERID177380=72a48181|Yxh72|Yxh7J; PHPSESSID=42mjojrpdicb7qkcl0aaiusbdo
+Sec-Fetch-Dest: empty
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+
+cookies
+{
+	"Cookies de la requête": {
+		"PHPSESSID": "42mjojrpdicb7qkcl0aaiusbdo",
+		"SERVERID177380": "72a48181|Yxh72|Yxh7J"
+	}
+}
