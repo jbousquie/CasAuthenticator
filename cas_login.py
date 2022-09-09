@@ -8,11 +8,12 @@
 # pip3 install lxml 
 # pip3 install bs4
 
-from base64 import encode
-from pprint import pp
+
 import sys
 import urllib3
 from bs4 import BeautifulSoup
+from pprint import pp
+
 
 import config
 
@@ -112,6 +113,17 @@ def send_tgc(service, tgc, redirect):
     g_service = http.request('GET', redirection_url, headers=post_headers, redirect=redirect)
 
     return g_service
+# Envoie la requête GET sur l'action souhaitée du service CASsifiée
+# ajoute les éventuels Cookies du site reçus lors de la réception du ticket CAS par le service
+# action_URL : URL de l'action à invoquer
+# service_responese : l'objet Response reçu du service quand il a accepté le ticket CAS
+def send_cookies(action_url, service_response):
+    headers = service_response.getheaders()
+    cookies = headers['Set-Cookie']
+    pp(cookies)
+    sys.exit()
+    #cookies = service_response['Set-Cookie']
+    return 
 
 def main():
     login = sys.argv[1]
