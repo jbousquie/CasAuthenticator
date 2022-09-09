@@ -3,7 +3,8 @@
 
 
 CAS_URL = 'https://cas.ut-capitole.fr/cas/login'
-REFERER = 'https://cas.ut-capitole.fr/cas/login'
+#REFERER = 'https://cas.ut-capitole.fr/cas/login'
+REFERER = 'https://cas.ut-capitole.fr/'
 ORIGIN = 'https://cas.ut-capitole.fr'
 
 

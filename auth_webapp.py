@@ -8,6 +8,7 @@
 
 import sys
 import getpass
+from pprint import pp
 from cas_login import get_tgc, send_tgc
 
 
@@ -41,7 +42,7 @@ def main():
     else:
         password = sys.argv[3]
     if l < 5:
-        redirect_string = input('Entrer le redirect True/False : ')
+        redirect_string = input('Entrer le redirect True/False (defaul = False): ')
     else: 
         redirect_string = sys.argv[4]        
 
@@ -49,8 +50,8 @@ def main():
         redirect = True
 
     response = auth_service(service, login, password, redirect)
-    print(response.data.decode('utf-8'))
-    print(response.getheaders())
+    #print(response.data.decode('utf-8'))
+    pp(response.getheaders())
     print(response.status)
     print(response.geturl())
 

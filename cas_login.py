@@ -9,6 +9,7 @@
 # pip3 install bs4
 
 from base64 import encode
+from pprint import pp
 import sys
 import urllib3
 from bs4 import BeautifulSoup
@@ -30,17 +31,17 @@ GET_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
     'Accept-Encoding': 'gzip, deflate, br', 
     'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7', 
-    'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15',
     'Cache-Control': 'max-age=0',
     'Connection': 'keep-alive',
     'Host': HOST
 }
 
 post_headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'Accept': 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate, br', 
-    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7', 
-    'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15',
+    'Accept-Language': 'fr-FR,fr;q=0.8,en-US;q=0.5,en;q=0.3', 
+    'User-Agent' : 'Mozilla/5.0 (X11; Linux x86_64; rv:104.0) Gecko/20100101 Firefox/104.0',
     'Cache-Control': 'max-age=0',
     'Connection': 'keep-alive',
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -51,7 +52,8 @@ post_headers = {
 
 # Retourne le ticket CAS après authentification selon les credentials passés
 def get_tgc(login, password):
-    http = urllib3.PoolManager()
+    #http = urllib3.PoolManager()
+    http = urllib3.ProxyManager('http://cache.iut-rodez.fr:8080')
     
     g = http.request('GET', CAS_URL, headers=GET_HEADERS)
     # récupération du cookie contenant JSESSIONID
@@ -89,20 +91,25 @@ def send_tgc(service, tgc, redirect):
     # Étape 1 : https://cas.ut-capitole.fr/cas/login?service=paramService  + TGC en cookie
     # récupération de la redirection et du ticket ST
     auth_url = CAS_URL + '?service=' + service
-    http = urllib3.PoolManager()
+    #http = urllib3.PoolManager()
+    http = urllib3.ProxyManager('http://cache.iut-rodez.fr:8080')
     cookie_string = post_headers['Cookie'] + ';CASTGC=' + tgc
     post_headers['Cookie'] = cookie_string
     post_headers.pop('Content-Type', None)
     g_cas = http.request_encode_url('GET', auth_url, headers=post_headers, redirect=False)
     redirection_url = g_cas.getheader('Location')
 
+
     # Étape 2 : https://service/?ticket=serviceTicket  avec les headers corrects
     u = urllib3.util.parse_url(service)
     post_headers['Host'] = u.host
-    post_headers['Referer'] = ORIGIN
+    post_headers['Referer'] = REFERER
     post_headers.pop('Origin', None)
     post_headers.pop('Cookie', None)
-    g_service = http.request('GET', redirection_url, post_headers, redirect=redirect)
+    post_headers.pop('Content-Type', None)
+    post_headers.pop('Cache-Control')
+
+    g_service = http.request('GET', redirection_url, headers=post_headers, redirect=redirect)
 
     return g_service
 
