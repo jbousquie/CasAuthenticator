@@ -5,12 +5,13 @@
 # procède à une authentification CAS et renvoie le ticket CAS TGC
 
 # pip3 install urllib3
+# pip3 install requests
 # pip3 install lxml 
 # pip3 install bs4
 
-
+import time
 import sys
-import urllib3
+import requests
 from bs4 import BeautifulSoup
 from pprint import pp
 
@@ -51,84 +52,95 @@ post_headers = {
     'Referer': REFERER,
     }
 
-# Retourne le ticket CAS après authentification selon les credentials passés
-def get_tgc(login, password):
-    #http = urllib3.PoolManager()
-    http = urllib3.ProxyManager('http://cache.iut-rodez.fr:8080')
-    
-    g = http.request('GET', CAS_URL, headers=GET_HEADERS)
-    # récupération du cookie contenant JSESSIONID
-    cookie = g.getheader('Set-Cookie')
-    jsessionid = cookie.split(';')[0]    # en espérant que ce soit toujours le premier
-    post_headers['Cookie'] = jsessionid
+proxy = { 
+    'http': 'http://cache.iut-rodez.fr:8080', 
+    'https': 'http://cache.iut-rodez.fr:8080' 
+    }
 
 
-    # récupération du formulaire fm1
-    html_response = g.data.decode('utf-8')
-    data_soup = BeautifulSoup(html_response, 'lxml')
-    form_tag = data_soup.find(id='fm1')
-    form_action = form_tag.get('action')
+# CAS Authenticator
+class CasAuthenticator:
 
-    # récupération de tous les balises input hidden du formulaire et ajout des crédentials
-    fields = {'username': login, 'password': password, 'submit': 'SE CONNECTER'}
-    input_tags = form_tag.find_all('input', attrs={'type':'hidden'})
-    for input_tag in input_tags:
-        name = input_tag.get('name')
-        value = input_tag.get('value')
-        fields[name] = value
+    # constructeur
+    def __init__(self):
+        self.cas_session = requests.Session()
+        self.tgc = ''
+
+    # Retourne le ticket CAS après authentification selon les credentials passés
+    def get_tgc(self, login, password):
+
+        # récupération du cookie contenant JSESSIONID
+        cas_session = self.cas_session
+        g = cas_session.get(CAS_URL, headers=GET_HEADERS, proxies=proxy)
+        
+        # récupération du formulaire fm1
+        html_response = g.text
+        data_soup = BeautifulSoup(html_response, 'lxml')
+        form_tag = data_soup.find(id='fm1')
+        form_action = form_tag.get('action')
+
+        # récupération de tous les balises input hidden du formulaire et ajout des crédentials
+        fields = {'username': login, 'password': password, 'submit': 'SE CONNECTER'}
+        input_tags = form_tag.find_all('input', attrs={'type':'hidden'})
+        for input_tag in input_tags:
+            name = input_tag.get('name')
+            value = input_tag.get('value')
+            fields[name] = value
+
+        # requête POST d'envoi des credentials
+        post_url = ORIGIN + form_action
+        p = cas_session.post(post_url, data=fields, headers=post_headers, allow_redirects=False, proxies=proxy)
+        tgc_cookie = p.cookies['CASTGC']
+        self.tgc = str(tgc_cookie)
+        return tgc_cookie
 
 
-    # requête POST d'envoi des credentials
-    post_url = ORIGIN + form_action
-    p = http.request_encode_body('POST', post_url, fields=fields, headers=post_headers, encode_multipart=False, redirect=False)
-    tgc_cookie = p.getheader('Set-Cookie')
-    tmp = tgc_cookie.split(COOKIE_TGC)[1]   # à droite de COOKIE_TGC
-    tgc = tmp.split(';')[0]                 # à gauche de ";"
-    return tgc
+    # renvoie l'URL de redirection avec le service ticket
+    def get_redirection_url(self, service):
 
-# envoie le ticket TGC au service CASsifié demandé
-def send_tgc(service, tgc, redirect):
-
-    # Étape 1 : https://cas.ut-capitole.fr/cas/login?service=paramService  + TGC en cookie
-    # récupération de la redirection et du ticket ST
-    auth_url = CAS_URL + '?service=' + service
-    #http = urllib3.PoolManager()
-    http = urllib3.ProxyManager('http://cache.iut-rodez.fr:8080')
-    cookie_string = post_headers['Cookie'] + ';CASTGC=' + tgc
-    post_headers['Cookie'] = cookie_string
-    post_headers.pop('Content-Type', None)
-    g_cas = http.request_encode_url('GET', auth_url, headers=post_headers, redirect=False)
-    redirection_url = g_cas.getheader('Location')
+        # envoi de https://cas.ut-capitole.fr/cas/login?service=paramService  + TGC en cookie
+        auth_url = CAS_URL + '?service=' + service  
+        post_headers.pop('Content-Type', None)
+        cas_session = self.cas_session
+        g_cas = cas_session.get(auth_url, headers=post_headers, allow_redirects=False, proxies=proxy)
+        redirection_url = g_cas.headers.get('location')
+        return redirection_url
 
 
-    # Étape 2 : https://service/?ticket=serviceTicket  avec les headers corrects
-    u = urllib3.util.parse_url(service)
-    post_headers['Host'] = u.host
-    post_headers['Referer'] = REFERER
-    post_headers.pop('Origin', None)
-    post_headers.pop('Cookie', None)
-    post_headers.pop('Content-Type', None)
-    post_headers.pop('Cache-Control')
+class ServiceAuthenticator:
 
-    g_service = http.request('GET', redirection_url, headers=post_headers, redirect=redirect)
+    # constructeur
+    def __init__(self, service):
+        self.service = service
+        self.service_session = requests.Session()
+        self.authenticated_response = ''
 
-    return g_service
-# Envoie la requête GET sur l'action souhaitée du service CASsifiée
-# ajoute les éventuels Cookies du site reçus lors de la réception du ticket CAS par le service
-# action_URL : URL de l'action à invoquer
-# service_responese : l'objet Response reçu du service quand il a accepté le ticket CAS
-def send_cookies(action_url, service_response):
-    headers = service_response.getheaders()
-    cookies = headers['Set-Cookie']
-    pp(cookies)
-    sys.exit()
-    #cookies = service_response['Set-Cookie']
-    return 
+
+    # Retourne l'objet Response après toutes les redirections à la requête https://service/?ticket=serviceTicket
+    def getAuthenticatedService(self, redirection_url):
+        self.redirection_url = redirection_url
+        service = self.service
+
+        u = requests.utils.urlparse(service)
+        post_headers['Host'] = u.netloc
+        post_headers['Referer'] = REFERER
+        post_headers.pop('Origin', None)
+        post_headers.pop('Cookie', None)
+        post_headers.pop('Content-Type', None)
+        post_headers.pop('Cache-Control')
+
+        service_session = self.service_session
+        g_service = service_session.get(redirection_url, headers=post_headers, allow_redirects=True, proxies=proxy)
+        self.authenticated_response = g_service
+        return g_service
+
+
 
 def main():
     login = sys.argv[1]
     password = sys.argv[2]
-    ret = get_tgc(login, password)
+    ca = CasAuthenticator()
+    ret = ca.get_tgc(login, password)
     print(ret)
 
 if __name__ == '__main__':
