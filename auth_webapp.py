@@ -14,9 +14,8 @@ from cas_login import CasAuthenticator, ServiceAuthenticator
 # Exécute l'action d'un service CASsifié
 # service authenticator = un objet ServiceAuthenticator ayant réussi une authentification
 # action_url = URL de l'action dans une des pages du site CASsifié ex : https://ohris.ut-capitole.fr/time/punch/add_virtual
-def exec_auth_action(service_authenticator, action_url):
-    # à faire
-    # service.authenticator.exec(action_url, params) => coder la méthode dans ServiceAuthenticator : envoi d'un GET xhr
+def exec_auth_action(service_authenticator, action_url, headers):
+    service_authenticator.execAction(action_url, headers)
     return
 
 
@@ -39,7 +38,7 @@ def auth_service(service, login, password):
 
 
 def main():
-    redirect = False
+
     l = len(sys.argv)
     if l < 3:
         print("Erreur nb parametres. Usage : auth_webapp.py urlService urlAction loginCAS passwordCAS")
@@ -59,7 +58,14 @@ def main():
         password = sys.argv[4]
 
     sa = auth_service(service, login, password)
-    exec_auth_action(sa, action_url)
+    headers_punch = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin'
+        }
+    exec_auth_action(sa, action_url, headers_punch)
 
 
 
