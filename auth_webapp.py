@@ -3,10 +3,11 @@
 
 
 # $ ./auth_webapp.py urlService loginCAS passwordCAS allowRedirect
-# ex : ./auth_webapp.py https://ohris.ut-capitole.fr/fr/  https://ohris.ut-capitole.fr/time/punch/add_virtual jbousqui maudePasse
+# ex : ./auth_webapp.py https://ohris.ut-capitole.fr/fr/  https://ohris.ut-capitole.fr/fr/time/punch/add_virtual jbousqui maudePasse
 # loginCAS, passwordCAS et redirect optionnels, demandés par prompt si non passés
 
 import sys
+import time
 import getpass
 from pprint import pp
 from cas_login import CasAuthenticator, ServiceAuthenticator
@@ -58,6 +59,7 @@ def main():
         password = sys.argv[4]
 
     sa = auth_service(service, login, password)
+    time.sleep(2)
     headers_punch = {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json, text/javascript, */*; q=0.01',

@@ -99,6 +99,7 @@ class CasAuthenticator:
             fields[name] = value
 
         # requête POST d'envoi des credentials
+        time.sleep(1)  # mime un comportement humain, petit délai
         post_url = ORIGIN + form_action
         post_headers = self.post_headers
         p = cas_session.post(post_url, data=fields, headers=post_headers, allow_redirects=False, proxies=proxy)
@@ -154,8 +155,6 @@ class ServiceAuthenticator:
             service_headers[key] = action_headers[key]
 
         service_session = self.service_session
-        action = ''
-        print(service_session.cookies)
         action = service_session.get(action_url, headers=service_headers, allow_redirects=False, proxies=proxy)
         print(action.text)
         return action
