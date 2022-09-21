@@ -59,7 +59,7 @@ def main():
         password = sys.argv[4]
 
     sa = auth_service(service, login, password)
-    time.sleep(2)
+    time.sleep(0.5)
     headers_punch = {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json, text/javascript, */*; q=0.01',

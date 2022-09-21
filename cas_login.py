@@ -18,6 +18,7 @@ from pprint import pp
 
 import config
 
+sys.stdout.reconfigure(encoding='utf-8')
 
 CAS_URL = config.CAS_URL
 REFERER = config.REFERER
@@ -99,7 +100,7 @@ class CasAuthenticator:
             fields[name] = value
 
         # requête POST d'envoi des credentials
-        time.sleep(1)  # mime un comportement humain, petit délai
+        time.sleep(0.6)  # mime un comportement humain, petit délai
         post_url = ORIGIN + form_action
         post_headers = self.post_headers
         p = cas_session.post(post_url, data=fields, headers=post_headers, allow_redirects=False, proxies=proxy)
@@ -153,8 +154,9 @@ class ServiceAuthenticator:
         # ajout des headers passés en paramètres au header initial
         for key in action_headers:
             service_headers[key] = action_headers[key]
-
+            
         service_session = self.service_session
+        print(service_session.cookies)
         action = service_session.get(action_url, headers=service_headers, allow_redirects=False, proxies=proxy)
         print(action.text)
         return action
