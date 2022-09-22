@@ -145,6 +145,7 @@ class ServiceAuthenticator:
         service_session = self.service_session
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
         self.authenticated_response = g_service
+        print(service_session.cookies)
         return g_service
 
     # Exécute l'action (GET) dans le service authentifié par CAS. Retourne l'objet Response à la requête https://service/action
@@ -156,7 +157,6 @@ class ServiceAuthenticator:
             service_headers[key] = action_headers[key]
             
         service_session = self.service_session
-        print(service_session.cookies)
         action = service_session.get(action_url, headers=service_headers, allow_redirects=False, proxies=proxy)
         print(action.text)
         return action
