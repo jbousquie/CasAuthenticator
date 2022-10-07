@@ -4,7 +4,6 @@
 # signature : cas_login.py loginCAS passwordCAS
 # procède à une authentification CAS et renvoie le ticket CAS TGC
 
-# pip3 install urllib3
 # pip3 install requests
 # pip3 install lxml 
 # pip3 install bs4
