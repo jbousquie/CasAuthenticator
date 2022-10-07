@@ -9,7 +9,6 @@
 import sys
 import time
 import getpass
-from pprint import pp
 from .cas_login import CasAuthenticator, ServiceAuthenticator
 
 # Exécute l'action d'un service CASsifié
@@ -18,7 +17,6 @@ from .cas_login import CasAuthenticator, ServiceAuthenticator
 def exec_auth_action(service_authenticator, action_url, headers):
     action = service_authenticator.execAction(action_url, headers)
     return action
-
 
 
 # Retourne l'objet ServiceAuthenticator à la requête sur l'URL service, authentifiée par CAS avec les credentials passés
