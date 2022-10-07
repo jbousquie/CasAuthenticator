@@ -10,7 +10,7 @@ import sys
 import time
 import getpass
 from pprint import pp
-from cas_login import CasAuthenticator, ServiceAuthenticator
+from .cas_login import CasAuthenticator, ServiceAuthenticator
 
 # Exécute l'action d'un service CASsifié
 # service authenticator = un objet ServiceAuthenticator ayant réussi une authentification

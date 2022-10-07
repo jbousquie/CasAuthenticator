@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from pprint import pp
 
 
-import config
+from . import config
 
 sys.stdout.reconfigure(encoding='utf-8')
 
