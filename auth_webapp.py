@@ -16,8 +16,8 @@ from .cas_login import CasAuthenticator, ServiceAuthenticator
 # service authenticator = un objet ServiceAuthenticator ayant réussi une authentification
 # action_url = URL de l'action dans une des pages du site CASsifié ex : https://ohris.ut-capitole.fr/time/punch/add_virtual
 def exec_auth_action(service_authenticator, action_url, headers):
-    service_authenticator.execAction(action_url, headers)
-    return
+    action = service_authenticator.execAction(action_url, headers)
+    return action
 
 
 
