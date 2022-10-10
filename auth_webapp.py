@@ -26,6 +26,9 @@ def auth_service(service, login, password):
     # authentif et récupération du ticket CAS
     ca = CasAuthenticator()
     tgc = ca.get_tgc(login, password)
+    if tgc == '':
+        msg = "Erreur authentification CAS pour " + login
+        return msg
     redirection_url = ca.get_redirection_url(service)
     
     # authentif service avec le ticket CAS

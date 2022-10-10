@@ -103,8 +103,11 @@ class CasAuthenticator:
         post_url = ORIGIN + form_action
         post_headers = self.post_headers
         p = cas_session.post(post_url, data=fields, headers=post_headers, allow_redirects=False, proxies=proxy)
-        tgc_cookie = p.cookies['CASTGC']
-        self.tgc = str(tgc_cookie)
+        tgc_cookie = ''
+        cks = p.cookies
+        if 'CASTGC' in cks:
+            tgc_cookie = str(cks['CASTGC'])
+            self.tgc = tgc_cookie
         return tgc_cookie
 
 
