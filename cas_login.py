@@ -16,7 +16,8 @@ from pprint import pp
 
 
 from . import config
-#import config
+# pour test local :
+# import config
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -125,6 +126,7 @@ class CasAuthenticator:
         return redirection_url
 
 
+
 class ServiceAuthenticator:
 
     # constructeur
@@ -133,9 +135,11 @@ class ServiceAuthenticator:
         self.service_session = requests.Session()
         self.service_headers = SERVICE_POST_HEADERS
         self.authenticated_response = ''
+        self.status_code = 0
 
 
     # Retourne l'objet Response après toutes les redirections à la requête https://service/?ticket=serviceTicket
+    # Modifié pour Ohris : suppression des redirections
     def getAuthenticatedService(self, redirection_url):
         self.redirection_url = redirection_url
         service = self.service
@@ -146,11 +150,20 @@ class ServiceAuthenticator:
         service_headers['Referer'] = u.netloc
 
         service_session = self.service_session
+        # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
+        print('caslogin.py : ServiceAuthenticator.getAuthenticatedService : envoi du ST au service')
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=False, proxies=proxy)
-        time.sleep(2)
-        g_service = service_session.get(service, headers=service_headers, allow_redirects=True, proxies=proxy)
-        self.authenticated_response = g_service
-        print(service_session.cookies)
+        status_code = 0
+        attempts = 1
+        print('cas_login.py : ServiceAuthenticator.getAuthenticatedService : accès au service')
+        while status_code != 200 and attempts > 0:
+            attempts -= 1
+            time.sleep(3)
+            g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
+            status_code = g_service.status_code
+            self.authenticated_response = g_service
+            print('  > essai : ', str(4 - attempts), 'status : ', str(status_code))
+        self.status_code = status_code
         return g_service
 
     # Exécute l'action (GET) dans le service authentifié par CAS. Retourne l'objet Response à la requête https://service/action
@@ -162,6 +175,7 @@ class ServiceAuthenticator:
             service_headers[key] = action_headers[key]
             
         service_session = self.service_session
+        print('cas_login.py : ServiceAuthenticator.execAction : envoi de la requête action')
         action = service_session.get(action_url, headers=service_headers, allow_redirects=False, proxies=proxy)
         print(action.text)
         return action
@@ -180,7 +194,7 @@ def main():
     redirect = ca.get_redirection_url("https://ohris.ut-capitole.fr/fr/")
     sa = ServiceAuthenticator("https://ohris.ut-capitole.fr/fr/")
     resp = sa.getAuthenticatedService(redirect)
-    print(resp.url)
+    print(resp.status_code, resp.url)
 
 if __name__ == '__main__':
     sys.exit(main())

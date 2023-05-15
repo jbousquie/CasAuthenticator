@@ -10,6 +10,9 @@ import sys
 import time
 import getpass
 from .cas_login import CasAuthenticator, ServiceAuthenticator
+# pour test local
+#from cas_login import CasAuthenticator, ServiceAuthenticator
+
 
 # Exécute l'action d'un service CASsifié
 # service authenticator = un objet ServiceAuthenticator ayant réussi une authentification
@@ -22,18 +25,29 @@ def exec_auth_action(service_authenticator, action_url, headers):
 # Retourne l'objet ServiceAuthenticator à la requête sur l'URL service, authentifiée par CAS avec les credentials passés
 # Cette fonction réalise l'authentification CAS du service CASsifié
 def auth_service(service, login, password):
+
+    status_code = 0
+    attempts = 4
     
-    # authentif et récupération du ticket CAS
-    ca = CasAuthenticator()
-    tgc = ca.get_tgc(login, password)
-    if tgc == '':
-        msg = "Erreur authentification CAS pour " + login
-        return msg
-    redirection_url = ca.get_redirection_url(service)
-    
-    # authentif service avec le ticket CAS
-    sa = ServiceAuthenticator(service)
-    sa.getAuthenticatedService(redirection_url)
+    while status_code != 200 and attempts > 0:
+        attempts -= 1
+        nb = 4 - attempts
+        # authentif et récupération du ticket CAS
+        print('\n**************\n')
+        print('auth_webapp.py : démarrage essai ' + str(nb) + ' de auth_service (authentif CAS + redirect ST + auth_service)')
+        ca = CasAuthenticator()
+        tgc = ca.get_tgc(login, password)
+        if tgc == '':
+            msg = "Erreur authentification CAS pour " + login
+            return msg
+        redirection_url = ca.get_redirection_url(service)
+        
+        # authentif service avec le ticket CAS
+        sa = ServiceAuthenticator(service)
+        sa.getAuthenticatedService(redirection_url)
+        status_code = sa.status_code
+        print('auth_webapp.py : auth_service essai ' + str(nb) + ' status : ' + str(status_code))
+        time.sleep(5)
     
     return sa
 
@@ -60,7 +74,6 @@ def main():
         password = sys.argv[4]
 
     sa = auth_service(service, login, password)
-    time.sleep(0.2)
     headers_punch = {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json, text/javascript, */*; q=0.01',
