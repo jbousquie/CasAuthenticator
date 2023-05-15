@@ -16,6 +16,7 @@ from pprint import pp
 
 
 from . import config
+#import config
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -145,7 +146,9 @@ class ServiceAuthenticator:
         service_headers['Referer'] = u.netloc
 
         service_session = self.service_session
-        g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
+        g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=False, proxies=proxy)
+        time.sleep(2)
+        g_service = service_session.get(service, headers=service_headers, allow_redirects=True, proxies=proxy)
         self.authenticated_response = g_service
         print(service_session.cookies)
         return g_service
@@ -174,6 +177,10 @@ def main():
     ca = CasAuthenticator()
     ret = ca.get_tgc(login, password)
     print(ret)
+    redirect = ca.get_redirection_url("https://ohris.ut-capitole.fr/fr/")
+    sa = ServiceAuthenticator("https://ohris.ut-capitole.fr/fr/")
+    resp = sa.getAuthenticatedService(redirect)
+    print(resp.url)
 
 if __name__ == '__main__':
     sys.exit(main())
