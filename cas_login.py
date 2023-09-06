@@ -151,18 +151,21 @@ class ServiceAuthenticator:
 
         service_session = self.service_session
         # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
-        print('caslogin.py : ServiceAuthenticator.getAuthenticatedService : envoi du ST au service')
+        print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à{redirection_url}')
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=False, proxies=proxy)
         status_code = 0
-        attempts = 1
-        print('cas_login.py : ServiceAuthenticator.getAuthenticatedService : accès au service')
+        attempts = 4
+        print(f'cas_login.py : ServiceAuthenticator.getAuthenticatedService() : tentative d\'accès à {service}')
+        time.sleep(2)
         while status_code != 200 and attempts > 0:
             attempts -= 1
-            time.sleep(3)
+            time.sleep(2.5)
             g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
             status_code = g_service.status_code
             self.authenticated_response = g_service
-            print('  > essai : ', str(4 - attempts), 'status : ', str(status_code))
+            print('  > essai : ', str(4 - attempts), 'status code : ', str(status_code))
+            # print(g_service.cookies.get('PHPSESSID'))
+            # print(g_service.cookies.get('SERVERID177380')) # Ce cookie est nécessaire pour le punch d'entrée, mais n'est parfois pas reçu du serveur
         self.status_code = status_code
         return g_service
 
@@ -175,9 +178,9 @@ class ServiceAuthenticator:
             service_headers[key] = action_headers[key]
             
         service_session = self.service_session
-        print('cas_login.py : ServiceAuthenticator.execAction : envoi de la requête action')
+        print(f'cas_login.py : ServiceAuthenticator.execAction() : envoi de la requête action {action_url}')
         action = service_session.get(action_url, headers=service_headers, allow_redirects=False, proxies=proxy)
-        print(action.text)
+        #print(action.text)
         return action
 
 
