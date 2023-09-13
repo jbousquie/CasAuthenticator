@@ -152,21 +152,23 @@ class ServiceAuthenticator:
         service_session = self.service_session
         # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
         print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à{redirection_url}')
-        time.sleep(2)
-        g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=False, proxies=proxy)
-        status_code = 0
-        max_attempts = 3
-        attempts = 0
-        print(f'cas_login.py : ServiceAuthenticator.getAuthenticatedService() : tentative d\'accès à {service}')
-        while status_code != 200 and attempts < max_attempts:
-            attempts += 1
-            time.sleep(3)
-            g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
-            status_code = g_service.status_code
-            self.authenticated_response = g_service
-            print('  > essai : ', str(attempts), 'status code : ', str(status_code))
-            # print(g_service.cookies.get('PHPSESSID'))
-            # print(g_service.cookies.get('SERVERID177380')) # Ce cookie est nécessaire pour le punch d'entrée, mais n'est parfois pas reçu du serveur
+        g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
+        # status_code = 0
+        # max_attempts = 3
+        # attempts = 0
+        # print(f'cas_login.py : ServiceAuthenticator.getAuthenticatedService() : tentative d\'accès à {service}')
+        # while status_code != 200 and attempts < max_attempts:
+        #     attempts += 1
+        #     time.sleep(3)
+        #     g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
+        #     status_code = g_service.status_code
+        #     self.authenticated_response = g_service
+        #     print('  > essai : ', str(attempts), 'status code : ', str(status_code))
+        #     # print(g_service.cookies.get('PHPSESSID'))
+        #     # print(g_service.cookies.get('SERVERID177380')) # Ce cookie est nécessaire pour le punch d'entrée, mais n'est parfois pas reçu du serveur
+        status_code = g_service.status_code
+        # print(status_code)
+        # pp(service_session.cookies)
         self.status_code = status_code
         return g_service
 
