@@ -153,6 +153,7 @@ class ServiceAuthenticator:
         # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
         print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à{redirection_url}')
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
+        g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
         # status_code = 0
         # max_attempts = 3
         # attempts = 0
