@@ -151,7 +151,7 @@ class ServiceAuthenticator:
 
         service_session = self.service_session
         # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
-        print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à{redirection_url}')
+        print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à {redirection_url}')
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
         g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
         # status_code = 0
@@ -188,6 +188,15 @@ class ServiceAuthenticator:
         return action
 
 
+    # Envoi requête unique initiale pour récupérer la session
+    def initialGet(self, service):
+        u = requests.utils.urlparse(service)
+        service_headers = self.service_headers
+        service_headers['Host'] = u.netloc
+        service_headers['Referer'] = u.netloc
+        service_session = self.service_session
+        g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
+        return g_service
 
 
 
