@@ -195,7 +195,7 @@ class ServiceAuthenticator:
         service_headers['Host'] = u.netloc
         service_headers['Referer'] = u.netloc
         service_session = self.service_session
-        g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
+        g_service = service_session.get(service, headers=service_headers, allow_redirects=True, proxies=proxy)
         return g_service
 
 
