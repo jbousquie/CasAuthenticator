@@ -101,7 +101,7 @@ class CasAuthenticator:
             fields[name] = value
 
         # requête POST d'envoi des credentials
-        time.sleep(0.6)  # mime un comportement humain, petit délai
+        time.sleep(0.2)  # mime un comportement humain, petit délai
         post_url = ORIGIN + form_action
         post_headers = self.post_headers
         p = cas_session.post(post_url, data=fields, headers=post_headers, allow_redirects=False, proxies=proxy)
@@ -153,7 +153,7 @@ class ServiceAuthenticator:
         # modif pour le bug Ohris : 2 requêtes explicites sans redirect autorisés
         print(f'caslogin.py : ServiceAuthenticator.getAuthenticatedService() : envoi du ST CAS à {redirection_url}')
         g_service = service_session.get(redirection_url, headers=service_headers, allow_redirects=True, proxies=proxy)
-        g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
+        #g_service = service_session.get(service, headers=service_headers, allow_redirects=False, proxies=proxy)
         # status_code = 0
         # max_attempts = 3
         # attempts = 0
